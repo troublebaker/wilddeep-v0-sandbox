@@ -36,6 +36,20 @@ const PAGES: Array<{
     status: 'draft',
     source: 'v0 生成',
   },
+  {
+    href: '/conversation/demo',
+    title: '对话树视图',
+    description: '三栏布局，左侧节点树 / 中央消息流 / 右侧节点元信息（骨架版，未接 React Flow）',
+    status: 'draft',
+    source: 'v0 生成',
+  },
+  {
+    href: '/summary/demo',
+    title: 'Fan-in 总结页',
+    description: '把多条对话/分支聚合成总结，左主右辅来源溯源',
+    status: 'draft',
+    source: 'v0 生成',
+  },
 ]
 
 const STATUS_COLOR: Record<string, string> = {
