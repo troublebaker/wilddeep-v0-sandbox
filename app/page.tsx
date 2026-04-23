@@ -15,6 +15,27 @@ const PAGES: Array<{
     status: 'mock',
     source: '示例 — 由 AI 工程师手写，模拟 v0 输出风格',
   },
+  {
+    href: '/sign-up',
+    title: '注册页',
+    description: '邮箱注册或 Google 注册，含四种状态（默认 / 填写中 / 提交中 / 邮件已发送）',
+    status: 'draft',
+    source: 'v0 生成',
+  },
+  {
+    href: '/dashboard',
+    title: '主面板',
+    description: '用户对话列表，含侧边栏导航、搜索、空状态',
+    status: 'draft',
+    source: 'v0 生成',
+  },
+  {
+    href: '/explore',
+    title: '泛化探索页',
+    description: '输入主题 → 小模型拆分方向 → 选择方向 → 大模型并行深入研究',
+    status: 'draft',
+    source: 'v0 生成',
+  },
 ]
 
 const STATUS_COLOR: Record<string, string> = {

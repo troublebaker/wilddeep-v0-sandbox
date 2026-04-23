@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Mail, Lock, ArrowRight, MailCheck } from 'lucide-react'
+import { Mail, Lock, ArrowRight, MailCheck, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -40,6 +40,13 @@ export default function SignUpPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+      <Link
+        href="/"
+        className="fixed top-4 left-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="size-3.5" />
+        返回主页
+      </Link>
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
         <div className="space-y-2 text-center">

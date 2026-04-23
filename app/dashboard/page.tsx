@@ -12,6 +12,7 @@ import {
   Bell,
   LogOut,
   ChevronDown,
+  ArrowLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -130,6 +131,15 @@ export default function DashboardPage() {
               <span>{item.label}</span>
             </Link>
           ))}
+          <div className="pt-2 border-t border-border mt-2">
+            <Link
+              href="/"
+              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <ArrowLeft className="size-4 shrink-0" />
+              <span>返回主页</span>
+            </Link>
+          </div>
         </nav>
 
         {/* User Section */}

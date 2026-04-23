@@ -1,6 +1,7 @@
 'use client'
 
-import { Mail, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { Mail, ArrowRight, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,6 +11,13 @@ import { Separator } from '@/components/ui/separator'
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+      <Link
+        href="/"
+        className="fixed top-4 left-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="size-3.5" />
+        返回主页
+      </Link>
       <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <div className="mx-auto h-10 w-10 rounded-lg bg-primary/10 grid place-items-center">
