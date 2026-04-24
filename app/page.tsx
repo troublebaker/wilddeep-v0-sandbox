@@ -57,6 +57,13 @@ const PAGES: Array<{
     status: 'draft',
     source: 'v0 生成',
   },
+  {
+    href: '/carousel/demo',
+    title: '纸牌堆叠轮播',
+    description: '深读 AI 内容的主视图，Apple Music 风格，3 张卡片叠放，引用回填，副分支抽屉',
+    status: 'draft',
+    source: 'v0 生成',
+  },
 ]
 
 const STATUS_COLOR: Record<string, string> = {
