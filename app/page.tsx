@@ -37,6 +37,13 @@ const PAGES: Array<{
     source: 'v0 生成',
   },
   {
+    href: '/fanout',
+    title: '扩散视图页',
+    description: '用户提问 → AI 拆分成 N 个子方向 → 星状/放射状布局 → 3 种节点状态动画',
+    status: 'draft',
+    source: 'v0 生成',
+  },
+  {
     href: '/conversation/demo',
     title: '对话树视图',
     description: '三栏布局，左侧节点树 / 中央消息流 / 右侧节点元信息（骨架版，未接 React Flow）',
