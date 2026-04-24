@@ -53,7 +53,9 @@ app/
 | `app/conversation/[id]/branch/[branchId]/page.tsx` | 进入某个分支后的链视图 |
 | `app/explore/page.tsx` | Fan-out 起点：输入主题，看小模型拆分 |
 | `app/summary/[id]/page.tsx` | Fan-in 总结结果页 |
-| `app/settings/page.tsx` | 用户设置（模型、API Key 显示等） |
+| `app/settings/page.tsx` | 用户设置（模型、API Key 显示、交互行为开关等） |
+| `app/fanout/page.tsx` | **扩散视图**：提问框居中 + 子节点放射状散开 + 悬浮预览（核心入口） |
+| `app/carousel/[id]/page.tsx` | **轮播视图**：纸牌堆叠阅读 + 选中引用回填 + 副分支抽屉 |
 
 ## 强约束（**v0 生成代码时不要破坏**）
 
