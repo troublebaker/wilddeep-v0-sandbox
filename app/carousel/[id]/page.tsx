@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -9,6 +9,8 @@ import {
   Share2,
   BookMarked,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -149,9 +151,10 @@ const BRANCHES = [
 ]
 
 export default function CarouselPage({ params }: { params: { id: string } }) {
-  const [currentIndex, setCurrentIndex] = useState(1)
+  const [currentIndex, setCurrentIndex] = useState(2) // 从中间开始
   const [showBranchesSheet, setShowBranchesSheet] = useState(false)
   const [hasSelection, setHasSelection] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // 模拟 3 秒后显示引用
   useEffect(() => {
@@ -161,22 +164,78 @@ export default function CarouselPage({ params }: { params: { id: string } }) {
     return () => clearTimeout(timer)
   }, [])
 
+  // 触摸板/鼠标滚轮水平滑动
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let accumulatedDelta = 0
+    const threshold = 80
+
+    const handleWheel = (e: WheelEvent) => {
+      // 检测水平滑动（触摸板）或垂直滑动（鼠标滚轮）
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      
+      accumulatedDelta += delta
+
+      if (Math.abs(accumulatedDelta) > threshold) {
+        if (accumulatedDelta > 0) {
+          setCurrentIndex((prev) => Math.min(prev + 1, CARDS.length - 1))
+        } else {
+          setCurrentIndex((prev) => Math.max(prev - 1, 0))
+        }
+        accumulatedDelta = 0
+      }
+
+      e.preventDefault()
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [])
+
   const currentCard = CARDS[currentIndex]
-  const prevCard = CARDS[(currentIndex - 1 + CARDS.length) % CARDS.length]
-  const nextCard = CARDS[(currentIndex + 1) % CARDS.length]
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + CARDS.length) % CARDS.length)
+    setCurrentIndex((prev) => Math.max(prev - 1, 0))
   }
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % CARDS.length)
+    setCurrentIndex((prev) => Math.min(prev + 1, CARDS.length - 1))
+  }
+
+  // 计算每张卡片的样式
+  const getCardStyle = (index: number) => {
+    const diff = index - currentIndex
+    const absDir = Math.abs(diff)
+    
+    // 基础位置：中心卡片在 50%，每张卡片偏移 280px
+    const baseOffset = diff * 280
+    
+    // 缩放：中心卡片 1，越远越小
+    const scale = Math.max(0.7, 1 - absDir * 0.12)
+    
+    // z-index：中心卡片最高
+    const zIndex = 50 - absDir * 10
+    
+    // 透明度：中心卡片完全不透明，越远越透明
+    const opacity = Math.max(0.3, 1 - absDir * 0.25)
+    
+    // 旋转：左侧向右旋转，右侧向左旋转（3D 效果）
+    const rotateY = diff * -8
+    
+    return {
+      transform: `translateX(calc(-50% + ${baseOffset}px)) scale(${scale}) rotateY(${rotateY}deg)`,
+      zIndex,
+      opacity,
+      pointerEvents: (diff === 0 ? 'auto' : 'none') as 'auto' | 'none',
+    }
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col overflow-hidden">
       {/* 顶部 sticky 视图切换栏 */}
-      <div className="sticky top-0 z-40 h-12 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/75 flex items-center gap-4 px-6">
+      <div className="sticky top-0 z-[100] h-12 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/75 flex items-center gap-4 px-6">
         <Link
           href="/"
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -210,157 +269,119 @@ export default function CarouselPage({ params }: { params: { id: string } }) {
         </Button>
       </div>
 
-      {/* 主体区 */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 overflow-hidden">
-        {/* 纸牌堆叠区 */}
-        <div className="relative w-full h-[500px] max-w-5xl perspective">
-          {/* 左侧半卡 */}
-          <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1/3 opacity-50 scale-95 transition-all duration-300 pointer-events-none z-10"
-            style={{
-              transform:
-                'translateY(-50%) translateX(-40px) scale(0.95)',
-            }}
-          >
-            <div className="h-[480px] rounded-2xl bg-card shadow-lg ring-1 ring-foreground/10 p-6 overflow-hidden flex flex-col">
-              <div className="space-y-1 mb-4">
-                <div className="text-xs text-muted-foreground">
-                  {(currentIndex - 1 + CARDS.length) % CARDS.length + 1}/{CARDS.length}
-                </div>
-                <div className="text-sm font-medium line-clamp-1">
-                  {prevCard.title}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {prevCard.type}
-                </div>
-              </div>
-              <div className="flex-1 bg-muted/30 rounded animate-pulse" />
-            </div>
-          </div>
+      {/* 主体区 - Cover Flow 风格 */}
+      <div 
+        ref={containerRef}
+        className="flex-1 relative overflow-hidden"
+        style={{ perspective: '1200px' }}
+      >
+        {/* 左侧大按钮 */}
+        <button
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-[60] size-14 rounded-full bg-background/80 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="size-7" />
+        </button>
 
-          {/* 当前卡 - 完整显示 */}
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 z-30 w-full max-w-lg"
-          >
-            <div className="min-h-[480px] rounded-2xl bg-card shadow-2xl ring-1 ring-foreground/10 p-6 overflow-hidden flex flex-col">
-              {/* 卡片头部 */}
-              <div className="space-y-1 mb-6 pb-4 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-muted-foreground font-medium">
-                    {currentIndex + 1}/{CARDS.length}
+        {/* 右侧大按钮 */}
+        <button
+          onClick={handleNext}
+          disabled={currentIndex === CARDS.length - 1}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-[60] size-14 rounded-full bg-background/80 backdrop-blur border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <ChevronRight className="size-7" />
+        </button>
+
+        {/* 卡片容器 */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          {CARDS.map((card, index) => (
+            <div
+              key={card.id}
+              className="absolute left-1/2 w-[420px] transition-all duration-500 ease-out"
+              style={getCardStyle(index)}
+            >
+              <div className="h-[520px] rounded-2xl bg-card shadow-2xl ring-1 ring-foreground/10 p-6 overflow-hidden flex flex-col">
+                {/* 卡片头部 */}
+                <div className="space-y-1 mb-4 pb-4 border-b border-border shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-muted-foreground font-medium">
+                      {index + 1}/{CARDS.length}
+                    </div>
+                    <div className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                      {card.type}
+                    </div>
                   </div>
-                  <div className="inline-block px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                    {currentCard.type}
+                  <h2 className="text-lg font-semibold line-clamp-2">
+                    {card.title}
+                  </h2>
+                </div>
+
+                {/* 内容区 - 可滚动 */}
+                <div className="flex-1 overflow-y-auto mb-4 pr-2">
+                  <div className="prose prose-sm prose-invert max-w-none text-foreground text-sm leading-relaxed">
+                    {card.content
+                      .split('\n')
+                      .filter((line) => line.trim())
+                      .map((line, i) => (
+                        <div key={i}>
+                          {line.startsWith('##') ? (
+                            <h3 className="mt-3 mb-2 font-semibold text-foreground">
+                              {line.replace(/^## /, '')}
+                            </h3>
+                          ) : line.startsWith('**') ? (
+                            <p className="font-semibold text-foreground">
+                              {line}
+                            </p>
+                          ) : (
+                            <p>{line}</p>
+                          )}
+                        </div>
+                      ))}
                   </div>
                 </div>
-                <h2 className="text-lg font-semibold line-clamp-2">
-                  {currentCard.title}
-                </h2>
-              </div>
 
-              {/* 内容区 - 可滚动 */}
-              <div className="flex-1 overflow-y-auto mb-4 pr-2">
-                <div className="prose prose-sm prose-invert max-w-none text-foreground text-sm leading-relaxed">
-                  {currentCard.content
-                    .split('\n')
-                    .filter((line) => line.trim())
-                    .map((line, i) => (
-                      <div key={i}>
-                        {line.startsWith('##') ? (
-                          <h3 className="mt-3 mb-2 font-semibold text-foreground">
-                            {line.replace(/^## /, '')}
-                          </h3>
-                        ) : line.startsWith('**') ? (
-                          <p className="font-semibold text-foreground">
-                            {line}
-                          </p>
-                        ) : (
-                          <p>{line}</p>
-                        )}
-                      </div>
-                    ))}
+                {/* 卡片底部工具栏 */}
+                <div className="pt-4 border-t border-border flex items-center gap-2 shrink-0">
+                  <Button variant="ghost" size="sm" className="gap-1.5">
+                    <Copy className="size-3.5" />
+                    复制
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setShowBranchesSheet(true)}
+                  >
+                    <ChevronDown className="size-3.5" />
+                    {card.branches} 条分支
+                  </Button>
+                  <div className="flex-1" />
+                  <Button size="sm" className="gap-1.5">
+                    加入总结
+                  </Button>
                 </div>
-              </div>
-
-              {/* 卡片底部工具栏 */}
-              <div className="pt-4 border-t border-border flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="gap-1.5">
-                  <Copy className="size-3.5" />
-                  复制
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => setShowBranchesSheet(true)}
-                >
-                  <ChevronDown className="size-3.5" />
-                  {currentCard.branches} 条分支
-                </Button>
-                <div className="flex-1" />
-                <Button size="sm" className="gap-1.5">
-                  加入总结
-                </Button>
               </div>
             </div>
-          </div>
-
-          {/* 右侧半卡 */}
-          <div
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3 opacity-50 scale-95 transition-all duration-300 pointer-events-none z-10"
-            style={{
-              transform:
-                'translateY(-50%) translateX(40px) scale(0.95)',
-            }}
-          >
-            <div className="h-[480px] rounded-2xl bg-card shadow-lg ring-1 ring-foreground/10 p-6 overflow-hidden flex flex-col">
-              <div className="space-y-1 mb-4">
-                <div className="text-xs text-muted-foreground">
-                  {(currentIndex + 1) % CARDS.length + 1}/{CARDS.length}
-                </div>
-                <div className="text-sm font-medium line-clamp-1">
-                  {nextCard.title}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {nextCard.type}
-                </div>
-              </div>
-              <div className="flex-1 bg-muted/30 rounded animate-pulse" />
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Dots 指示器 */}
-        <div className="flex items-center gap-2 mt-8">
+        {/* Dots 指示器 - 底部居中 */}
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 backdrop-blur border border-border">
           {CARDS.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentIndex(i)}
-              className={`size-2 rounded-full transition-colors ${
+              className={`size-2.5 rounded-full transition-all ${
                 i === currentIndex
-                  ? 'bg-primary'
-                  : 'bg-muted hover:bg-muted-foreground/50'
+                  ? 'bg-primary w-6'
+                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
             />
           ))}
-        </div>
-
-        {/* 左右切换按钮 */}
-        <div className="flex items-center gap-4 mt-6">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={handlePrev}
-          >
-            <ArrowLeft className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            onClick={handleNext}
-          >
-            <ArrowRight className="size-4" />
-          </Button>
         </div>
       </div>
 
@@ -387,7 +408,7 @@ export default function CarouselPage({ params }: { params: { id: string } }) {
       )}
 
       {/* 底部输入区 */}
-      <div className="sticky bottom-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/75 border-t border-border px-6 py-4">
+      <div className="sticky bottom-0 z-[100] bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/75 border-t border-border px-6 py-4">
         <div className="mx-auto max-w-lg flex gap-2">
           <Textarea
             placeholder="对引用段落继续追问（作为副分支，不影响主线）..."
