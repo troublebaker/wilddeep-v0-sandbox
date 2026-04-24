@@ -64,6 +64,13 @@ const PAGES: Array<{
     status: 'draft',
     source: 'v0 生成',
   },
+  {
+    href: '/settings',
+    title: '设置页',
+    description: '左侧分类导航 + 右侧内容，6 个交互行为设置项（Switch / Slider / Select）',
+    status: 'draft',
+    source: 'v0 生成',
+  },
 ]
 
 const STATUS_COLOR: Record<string, string> = {
